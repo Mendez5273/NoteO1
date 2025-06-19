@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteO - Linux Inspired Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #100f0f;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .logo-section {
+            width: 160px;
+            background-color: #ffffff;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            border-right: 2px solid #444;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            background-color: #000000;
+            color: #00ff00;
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border-bottom: 2px solid #1b1b1b;
+        }
+
+        .tabs-section {
+            background-color: #0b0b0b;
+            color: #00ff00;
+            padding: 8px 15px;
+            font-size: 14px;
+            border-bottom: 1px solid #101010;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            user-select: none;
+        }
+
+        .command-input {
+            background-color: transparent;
+            color: #00ff00;
+            border: none;
+            outline: none;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            width: 100%;
+            height: 100%;
+            resize: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .command-input::placeholder {
+            color: #666;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 120px;
+            background-color: #0d0d0d;
+            border-right: 2px solid #111111;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-section-title {
+            color: #00ff00;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
+            flex-shrink: 0;
+        }
+
+        #folders-section, #notes-section {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-item {
+            background-color: #0f0f0f;
+            color: #00ff00;
+            padding: 8px;
+            margin-bottom: 5px;
+            border: 1px solid #666;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-item:hover {
+            background-color: #131313;
+        }
+
+        .sidebar-item.active {
+            background-color: #00ff00;
+            color: #000000;
+            border-color: #00ff00;
+        }
+
+        .sidebar-note {
+            background-color: #0f0f0f;
+            color: #00ff00;
+            padding: 8px;
+            margin-bottom: 5px;
+            border: 1px solid #666;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-note:hover {
+            background-color: #131313;
+        }
+
+        .sidebar-note.active {
+            background-color: #00ff00;
+            color: #000000;
+            border-color: #00ff00;
+        }
+
+        .main-editor {
+            flex: 1;
+            background-color: #0f0f0f;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-title {
+            color: #ffffff;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .editor-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00ff00;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .editor-content {
+            flex: 1;
+            background-color: #181818;
+            border: 1px solid #101010;
+            padding: 15px;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            line-height: 1.4;
+        }
+
+        .editor-content:focus {
+            border-color: #00ff00;
+        }
+
+        /* Terminal-style scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #666;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+
+        .notation-popup {
+            position: absolute;
+            background: #222;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            border-radius: 6px;
+            z-index: 1000;
+            min-width: 220px;
+            max-width: 350px;
+            max-height: 220px;
+            overflow-y: auto;
+            font-size: 14px;
+            box-shadow: 0 2px 8px #000a;
+        }
+        .notation-popup input {
+            width: 95%;
+            background: #111;
+            color: #00ff00;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            padding: 6px 8px;
+            margin: 6px 0 4px 0;
+            border-radius: 4px;
+        }
+        .notation-popup .notation-result {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+        .notation-popup .notation-result.selected {
+            background: #00ff00;
+            color: #000;
+        }
+        .notation-popup img {
+            height: 28px;
+            margin-right: 10px;
+            background: #fff;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-section">
+            NoteO
+        </div>
+        
+        <div class="main-content">
+            <div class="terminal-header">
+                Linux Inspired Terminal
+            </div>
+            
+            <div class="tabs-section">
+                <input type="text" class="command-input" placeholder="Type Commands Here..." value="" id="commandInput">
+            </div>
+            
+            <div class="content-area">
+                <div class="sidebar" id="sidebar">
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-title">FOLDERS</div>
+                        <div id="folders-section"></div>
+                    </div>
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-title">NOTES</div>
+                        <div id="notes-section"></div>
+                    </div>
+                </div>
+                
+                <div class="main-editor">
+                    <div class="page-title">
+                        Toggle open tabs / tab 1 / tab 2 / ...
+                    </div>
+                    <div class="editor-content" contenteditable="true" style="white-space:pre-wrap;outline:none;min-height:200px;background:#181818;color:#fff;font-family:'Courier New',monospace;font-size:14px;line-height:1.4;border:1px solid #101010;padding:15px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notationPopup" class="notation-popup" style="display:none;"></div>
+
+    <script>
+        // Terminal logic implementation
+        let currentDir = ".";
+        let folders = [];
+        let notes = {};
+        let noteContents = {};
+        let currentFolder = null;
+        let currentlyEditing = null;
+
+        // Command functions
+        function folder(name) {
+            folders.push(name);
+            notes[name] = [];
+            updateFoldersSection();
+            console.log(`Created folder: ${name}`);
+        }
+
+        function open(name) {
+            if (name === "..") {
+                saveCurrentNote(); // Save before leaving
+                currentFolder = null;
+                currentlyEditing = null;
+                console.log("Going back to root directory");
+                clearEditor();
+            } else if (folders.includes(name)) {
+                saveCurrentNote(); // Save before switching
+                currentFolder = name;
+                currentlyEditing = null;
+                console.log(`Opening folder: ${name}`);
+                clearEditor();
+            } else {
+                console.log(`Folder not found: ${name}`);
+            }
+            updateFoldersSection();
+            clearNotesSection();
+            // Automatically list notes when opening a folder
+            if (currentFolder) {
+                updateNotesSection();
+            }
+        }
+
+        function back() {
+            if (currentFolder) {
+                saveCurrentNote(); // Save before leaving
+                currentFolder = null;
+                currentlyEditing = null;
+                console.log("Going back to root directory");
+                updateFoldersSection();
+                clearNotesSection();
+                clearEditor();
+            } else {
+                console.log("Already at root directory");
+            }
+        }
+
+        function create(name) {
+            if (currentFolder) {
+                notes[currentFolder].push(name);
+                console.log(`Created note: ${name} in folder: ${currentFolder}`);
+            } else {
+                console.log("Please open a folder first before creating a note");
+            }
+        }
+
+        function list() {
+            if (currentFolder) {
+                updateNotesSection();
+                console.log(`Notes in ${currentFolder}:`, notes[currentFolder]);
+            } else {
+                console.log("Please open a folder first before listing notes");
+            }
+        }
+
+        function remove(name) {
+            const folderIndex = folders.indexOf(name);
+            
+            if (folderIndex > -1) {
+                folders.splice(folderIndex, 1);
+                delete notes[name];
+                if (currentFolder === name) {
+                    currentFolder = null;
+                }
+                console.log(`Removed folder: ${name}`);
+                updateFoldersSection();
+                clearNotesSection();
+            } else if (currentFolder && notes[currentFolder]) {
+                const noteIndex = notes[currentFolder].indexOf(name);
+                if (noteIndex > -1) {
+                    notes[currentFolder].splice(noteIndex, 1);
+                    console.log(`Removed note: ${name} from folder: ${currentFolder}`);
+                    updateNotesSection();
+                }
+            }
+        }
+
+        function edit(name) {
+            if (currentFolder && notes[currentFolder] && notes[currentFolder].includes(name)) {
+                const noteKey = `${currentFolder}/${name}`;
+                currentlyEditing = noteKey;
+                
+                // Load existing content or create empty content
+                if (!noteContents[noteKey]) {
+                    noteContents[noteKey] = "";
+                }
+                
+                // Update the editor
+                const editor = document.querySelector('.editor-content');
+                editor.value = noteContents[noteKey];
+                editor.focus();
+                
+                // Update page title to show what we're editing
+                const pageTitle = document.querySelector('.page-title');
+                pageTitle.textContent = `Editing: ${name} (in ${currentFolder})`;
+                
+                // Update notes section to highlight the active note
+                updateNotesSection();
+                
+                console.log(`Editing note: ${name} in folder: ${currentFolder}`);
+            } else {
+                console.log("Note not found in current folder");
+            }
+        }
+
+        function saveCurrentNote() {
+            if (currentlyEditing) {
+                const editor = document.querySelector('.editor-content');
+                noteContents[currentlyEditing] = editor.value;
+                console.log(`Saved note: ${currentlyEditing}`);
+            }
+        }
+
+        function save() {
+            if (currentlyEditing) {
+                saveCurrentNote();
+                console.log(`Note saved: ${currentlyEditing}`);
+            } else {
+                console.log("No note currently being edited");
+            }
+        }
+
+        function send(noteName) {
+            if (!currentFolder) {
+                console.log("Please open a folder first before sending content");
+                return;
+            }
+            
+            if (!notes[currentFolder] || !notes[currentFolder].includes(noteName)) {
+                console.log(`Note '${noteName}' not found in current folder`);
+                return;
+            }
+            
+            const noteKey = `${currentFolder}/${noteName}`;
+            const editor = document.querySelector('.editor-content');
+            const notepadContent = editor.value.trim();
+            
+            if (!notepadContent) {
+                console.log("No content in notepad to send");
+                return;
+            }
+            
+            // Get existing content or create empty
+            if (!noteContents[noteKey]) {
+                noteContents[noteKey] = "";
+            }
+            
+            // Add content to note
+            if (noteContents[noteKey] === "") {
+                // New note - start from top
+                noteContents[noteKey] = notepadContent;
+            } else {
+                // Existing note - add line break and append
+                noteContents[noteKey] += "\n\n" + notepadContent;
+            }
+            
+            // Clear the notepad
+            editor.value = "Date---";
+            
+            console.log(`Content sent to note: ${noteName} in folder: ${currentFolder}`);
+        }
+
+        function updateFoldersSection() {
+            const foldersSection = document.getElementById('folders-section');
+            foldersSection.innerHTML = '';
+            
+            folders.forEach(folder => {
+                const folderElement = document.createElement('div');
+                folderElement.className = 'sidebar-item';
+                if (currentFolder === folder) {
+                    folderElement.classList.add('active');
+                }
+                folderElement.textContent = folder;
+                folderElement.onclick = () => open(folder);
+                foldersSection.appendChild(folderElement);
+            });
+        }
+
+        function updateNotesSection() {
+            const notesSection = document.getElementById('notes-section');
+            notesSection.innerHTML = '';
+            
+            if (currentFolder && notes[currentFolder]) {
+                notes[currentFolder].forEach(note => {
+                    const noteElement = document.createElement('div');
+                    noteElement.className = 'sidebar-note';
+                    
+                    // Check if this note is currently being edited
+                    const noteKey = `${currentFolder}/${note}`;
+                    if (currentlyEditing === noteKey) {
+                        noteElement.classList.add('active');
+                    }
+                    
+                    noteElement.textContent = `-${note}`;
+                    noteElement.onclick = () => edit(note);
+                    notesSection.appendChild(noteElement);
+                });
+            }
+        }
+
+        function clearNotesSection() {
+            const notesSection = document.getElementById('notes-section');
+            notesSection.innerHTML = '';
+        }
+
+        function clearEditor() {
+            const editor = document.querySelector('.editor-content');
+            const pageTitle = document.querySelector('.page-title');
+            editor.value = getCurrentDate() + "\n\n";
+            pageTitle.textContent = "Toggle open tabs / tab 1 / tab 2 / ...";
+            currentlyEditing = null;
+        }
+
+        function getCurrentDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            return now.toLocaleDateString('en-US', options);
+        }
+
+        // Command processing
+        function processCommand(command) {
+            const parts = command.trim().split(' ');
+            if (parts.length === 0) return;
+            
+            const cmd = parts[0].toLowerCase();
+            const arg = parts[1];
+            
+            switch(cmd) {
+                case 'folder':
+                    if (arg) folder(arg);
+                    break;
+                case 'open':
+                    if (arg) open(arg);
+                    break;
+                case 'back':
+                    back();
+                    break;
+                case 'create':
+                    if (arg) create(arg);
+                    break;
+                case 'list':
+                    list();
+                    break;
+                case 'remove':
+                    if (arg) remove(arg);
+                    break;
+                case 'edit':
+                    if (arg) edit(arg);
+                    break;
+                case 'exit':
+                    console.log('Exit command - could close window or navigate away');
+                    break;
+                case 'save':
+                    save();
+                    break;
+                case 'send':
+                    if (arg) send(arg);
+                    break;
+                default:
+                    console.log(`Unknown command: ${cmd}`);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('commandInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const command = this.value;
+                this.value = '';
+                processCommand(command);
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+T to focus terminal
+            if (e.ctrlKey && e.key === 't') {
+                e.preventDefault();
+                document.getElementById('commandInput').focus();
+            }
+            // Ctrl+N to focus notepad
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                document.querySelector('.editor-content').focus();
+            }
+            
+            // Ctrl + Arrow key navigation
+            if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+                e.preventDefault();
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    navigateWithArrows(e.key === 'ArrowDown');
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    navigateSections(e.key === 'ArrowRight');
+                }
+            }
+        });
+
+        // Navigation variables
+        let currentSelectionIndex = -1;
+        let selectableItems = [];
+        let currentSection = 'terminal'; // terminal, folders, notes, editor
+        const sections = ['terminal', 'folders', 'notes', 'editor'];
+
+        function navigateSections(goRight) {
+            // Clear any previous horizontal navigation highlighting
+            clearHorizontalHighlighting();
+            
+            if (goRight) {
+                // Shift+Right: Go to notepad from anywhere (except when already on notepad)
+                if (currentSection !== 'editor') {
+                    currentSection = 'editor';
+                    focusSection(currentSection);
+                }
+            } else {
+                // Shift+Left: From notepad, go to top folder. From elsewhere, go to terminal
+                if (currentSection === 'editor') {
+                    // Go to first folder and highlight it
+                    const firstFolder = document.querySelector('#folders-section .sidebar-item');
+                    if (firstFolder) {
+                        firstFolder.focus();
+                        currentSection = 'folders';
+                        // Add right-side highlighting to show which folder is targeted
+                        firstFolder.style.borderRight = '3px solid #00ff00';
+                    }
+                } else {
+                    // Go to terminal
+                    currentSection = 'terminal';
+                    focusSection(currentSection);
+                }
+            }
+        }
+
+        function clearHorizontalHighlighting() {
+            // Remove any right-side highlighting from folders
+            const folders = document.querySelectorAll('#folders-section .sidebar-item');
+            folders.forEach(folder => {
+                folder.style.borderRight = '';
+            });
+        }
+
+        function focusSection(section) {
+            switch(section) {
+                case 'terminal':
+                    document.getElementById('commandInput').focus();
+                    break;
+                case 'folders':
+                    const firstFolder = document.querySelector('#folders-section .sidebar-item');
+                    if (firstFolder) firstFolder.focus();
+                    break;
+                case 'notes':
+                    const firstNote = document.querySelector('#notes-section .sidebar-note');
+                    if (firstNote) firstNote.focus();
+                    break;
+                case 'editor':
+                    document.querySelector('.editor-content').focus();
+                    break;
+            }
+            console.log(`Focused on: ${section}`);
+        }
+
+        function navigateWithArrows(goDown) {
+            // Clear any horizontal navigation highlighting
+            clearHorizontalHighlighting();
+            
+            // Get all selectable items (terminal, folders, and notes)
+            const terminal = document.getElementById('commandInput');
+            const folders = document.querySelectorAll('#folders-section .sidebar-item');
+            const notes = document.querySelectorAll('#notes-section .sidebar-note');
+            const editor = document.querySelector('.editor-content');
+            
+            // Create array of all focusable elements
+            selectableItems = [terminal, ...folders, ...notes, editor];
+            
+            if (selectableItems.length === 0) return;
+            
+            // Update selection index
+            if (currentSelectionIndex === -1) {
+                currentSelectionIndex = goDown ? 0 : selectableItems.length - 1;
+            } else {
+                if (goDown) {
+                    currentSelectionIndex = (currentSelectionIndex + 1) % selectableItems.length;
+                } else {
+                    currentSelectionIndex = currentSelectionIndex === 0 ? selectableItems.length - 1 : currentSelectionIndex - 1;
+                }
+            }
+            
+            // Remove previous selection highlighting
+            selectableItems.forEach(item => {
+                if (item.style) {
+                    item.style.outline = 'none';
+                    item.style.outlineOffset = '0';
+                }
+            });
+            
+            // Highlight current selection
+            const currentItem = selectableItems[currentSelectionIndex];
+            if (currentItem) {
+                currentItem.focus();
+                if (currentItem.style) {
+                    currentItem.style.outline = '2px solid #00ff00';
+                    currentItem.style.outlineOffset = '2px';
+                    currentItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        }
+
+        // Enter key to activate selected item
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && currentSelectionIndex >= 0 && selectableItems.length > 0) {
+                const currentItem = selectableItems[currentSelectionIndex];
+                // Only trigger if we're not in the editor and have a valid selection
+                if (currentItem && currentItem !== document.querySelector('.editor-content')) {
+                    e.preventDefault();
+                    currentItem.click();
+                }
+            }
+        });
+
+        // Initialize sidebar
+        updateFoldersSection();
+        clearNotesSection();
+        
+        // Initialize notepad with current date
+        document.querySelector('.editor-content').value = getCurrentDate() + "\n\n";
+
+        // Math Notation Symbols - Updated paths for new folder structure
+        const mathSymbols = [
+            // Greek Letters
+            { name: 'alpha', file: 'math_symbols/greek/greek_alpha.png' },
+            { name: 'beta', file: 'math_symbols/greek/greek_beta.png' },
+            { name: 'gamma', file: 'math_symbols/greek/greek_gamma.png' },
+            { name: 'delta', file: 'math_symbols/greek/greek_delta.png' },
+            { name: 'epsilon', file: 'math_symbols/greek/greek_epsilon.png' },
+            { name: 'zeta', file: 'math_symbols/greek/greek_zeta.png' },
+            { name: 'eta', file: 'math_symbols/greek/greek_eta.png' },
+            { name: 'theta', file: 'math_symbols/greek/greek_theta.png' },
+            { name: 'iota', file: 'math_symbols/greek/greek_iota.png' },
+            { name: 'kappa', file: 'math_symbols/greek/greek_kappa.png' },
+            { name: 'lambda', file: 'math_symbols/greek/greek_lambda.png' },
+            { name: 'mu', file: 'math_symbols/greek/greek_mu.png' },
+            { name: 'nu', file: 'math_symbols/greek/greek_nu.png' },
+            { name: 'xi', file: 'math_symbols/greek/greek_xi.png' },
+            { name: 'omicron', file: 'math_symbols/greek/greek_omicron.png' },
+            { name: 'pi', file: 'math_symbols/greek/greek_pi.png' },
+            { name: 'rho', file: 'math_symbols/greek/greek_rho.png' },
+            { name: 'sigma', file: 'math_symbols/greek/greek_sigma.png' },
+            { name: 'tau', file: 'math_symbols/greek/greek_tau.png' },
+            { name: 'upsilon', file: 'math_symbols/greek/greek_upsilon.png' },
+            { name: 'phi', file: 'math_symbols/greek/greek_phi.png' },
+            { name: 'chi', file: 'math_symbols/greek/greek_chi.png' },
+            { name: 'psi', file: 'math_symbols/greek/greek_psi.png' },
+            { name: 'omega', file: 'math_symbols/greek/greek_omega.png' },
+            
+            // Vector Notation (Hats)
+            { name: 'a_hat', file: 'math_symbols/vectors/a_hat.png' },
+            { name: 'b_hat', file: 'math_symbols/vectors/b_hat.png' },
+            { name: 'c_hat', file: 'math_symbols/vectors/c_hat.png' },
+            { name: 'd_hat', file: 'math_symbols/vectors/d_hat.png' },
+            { name: 'e_hat', file: 'math_symbols/vectors/e_hat.png' },
+            { name: 'f_hat', file: 'math_symbols/vectors/f_hat.png' },
+            { name: 'g_hat', file: 'math_symbols/vectors/g_hat.png' },
+            { name: 'h_hat', file: 'math_symbols/vectors/h_hat.png' },
+            { name: 'i_hat', file: 'math_symbols/vectors/i_hat.png' },
+            { name: 'j_hat', file: 'math_symbols/vectors/j_hat.png' },
+            { name: 'k_hat', file: 'math_symbols/vectors/k_hat.png' },
+            { name: 'l_hat', file: 'math_symbols/vectors/l_hat.png' },
+            { name: 'm_hat', file: 'math_symbols/vectors/m_hat.png' },
+            { name: 'n_hat', file: 'math_symbols/vectors/n_hat.png' },
+            { name: 'o_hat', file: 'math_symbols/vectors/o_hat.png' },
+            { name: 'p_hat', file: 'math_symbols/vectors/p_hat.png' },
+            { name: 'q_hat', file: 'math_symbols/vectors/q_hat.png' },
+            { name: 'r_hat', file: 'math_symbols/vectors/r_hat.png' },
+            { name: 's_hat', file: 'math_symbols/vectors/s_hat.png' },
+            { name: 't_hat', file: 'math_symbols/vectors/t_hat.png' },
+            { name: 'u_hat', file: 'math_symbols/vectors/u_hat.png' },
+            { name: 'v_hat', file: 'math_symbols/vectors/v_hat.png' },
+            { name: 'w_hat', file: 'math_symbols/vectors/w_hat.png' },
+            { name: 'x_hat', file: 'math_symbols/vectors/x_hat.png' },
+            { name: 'y_hat', file: 'math_symbols/vectors/y_hat.png' },
+            { name: 'z_hat', file: 'math_symbols/vectors/z_hat.png' },
+            
+            // Vector Notation (Arrows)
+            { name: 'a_arrow', file: 'math_symbols/vectors/a_arrow.png' },
+            { name: 'b_arrow', file: 'math_symbols/vectors/b_arrow.png' },
+            { name: 'c_arrow', file: 'math_symbols/vectors/c_arrow.png' },
+            { name: 'd_arrow', file: 'math_symbols/vectors/d_arrow.png' },
+            { name: 'e_arrow', file: 'math_symbols/vectors/e_arrow.png' },
+            { name: 'f_arrow', file: 'math_symbols/vectors/f_arrow.png' },
+            { name: 'g_arrow', file: 'math_symbols/vectors/g_arrow.png' },
+            { name: 'h_arrow', file: 'math_symbols/vectors/h_arrow.png' },
+            { name: 'i_arrow', file: 'math_symbols/vectors/i_arrow.png' },
+            { name: 'j_arrow', file: 'math_symbols/vectors/j_arrow.png' },
+            { name: 'k_arrow', file: 'math_symbols/vectors/k_arrow.png' },
+            { name: 'l_arrow', file: 'math_symbols/vectors/l_arrow.png' },
+            { name: 'm_arrow', file: 'math_symbols/vectors/m_arrow.png' },
+            { name: 'n_arrow', file: 'math_symbols/vectors/n_arrow.png' },
+            { name: 'o_arrow', file: 'math_symbols/vectors/o_arrow.png' },
+            { name: 'p_arrow', file: 'math_symbols/vectors/p_arrow.png' },
+            { name: 'q_arrow', file: 'math_symbols/vectors/q_arrow.png' },
+            { name: 'r_arrow', file: 'math_symbols/vectors/r_arrow.png' },
+            { name: 's_arrow', file: 'math_symbols/vectors/s_arrow.png' },
+            { name: 't_arrow', file: 'math_symbols/vectors/t_arrow.png' },
+            { name: 'u_arrow', file: 'math_symbols/vectors/u_arrow.png' },
+            { name: 'v_arrow', file: 'math_symbols/vectors/v_arrow.png' },
+            { name: 'w_arrow', file: 'math_symbols/vectors/w_arrow.png' },
+            { name: 'x_arrow', file: 'math_symbols/vectors/x_arrow.png' },
+            { name: 'y_arrow', file: 'math_symbols/vectors/y_arrow.png' },
+            { name: 'z_arrow', file: 'math_symbols/vectors/z_arrow.png' },
+            
+            // LaTeX Expressions
+            { name: 'x_squared', file: 'math_symbols/latex/latex_x_squared.png' },
+            { name: 'y_squared', file: 'math_symbols/latex/latex_y_squared.png' },
+            { name: 'z_squared', file: 'math_symbols/latex/latex_z_squared.png' },
+            { name: 'a_squared', file: 'math_symbols/latex/latex_a_squared.png' },
+            { name: 'b_squared', file: 'math_symbols/latex/latex_b_squared.png' },
+            { name: 'c_squared', file: 'math_symbols/latex/latex_c_squared.png' },
+            { name: 'x_cubed', file: 'math_symbols/latex/latex_x_cubed.png' },
+            { name: 'y_cubed', file: 'math_symbols/latex/latex_y_cubed.png' },
+            { name: 'z_cubed', file: 'math_symbols/latex/latex_z_cubed.png' },
+            { name: 'x_to_n', file: 'math_symbols/latex/latex_x_to_n.png' },
+            { name: 'y_to_n', file: 'math_symbols/latex/latex_y_to_n.png' },
+            { name: 'z_to_n', file: 'math_symbols/latex/latex_z_to_n.png' },
+            { name: 'x_sub_1', file: 'math_symbols/latex/latex_x_sub_1.png' },
+            { name: 'x_sub_2', file: 'math_symbols/latex/latex_x_sub_2.png' },
+            { name: 'x_sub_n', file: 'math_symbols/latex/latex_x_sub_n.png' },
+            { name: 'y_sub_1', file: 'math_symbols/latex/latex_y_sub_1.png' },
+            { name: 'y_sub_2', file: 'math_symbols/latex/latex_y_sub_2.png' },
+            { name: 'y_sub_n', file: 'math_symbols/latex/latex_y_sub_n.png' },
+            { name: 'z_sub_1', file: 'math_symbols/latex/latex_z_sub_1.png' },
+            { name: 'z_sub_2', file: 'math_symbols/latex/latex_z_sub_2.png' },
+            { name: 'z_sub_n', file: 'math_symbols/latex/latex_z_sub_n.png' },
+            { name: 'frac_1_2', file: 'math_symbols/latex/latex_frac_1_2.png' },
+            { name: 'frac_1_3', file: 'math_symbols/latex/latex_frac_1_3.png' },
+            { name: 'frac_2_3', file: 'math_symbols/latex/latex_frac_2_3.png' },
+            { name: 'frac_1_4', file: 'math_symbols/latex/latex_frac_1_4.png' },
+            { name: 'frac_3_4', file: 'math_symbols/latex/latex_frac_3_4.png' },
+            { name: 'frac_1_5', file: 'math_symbols/latex/latex_frac_1_5.png' },
+            { name: 'sqrt_x', file: 'math_symbols/latex/latex_sqrt_x.png' },
+            { name: 'sqrt_y', file: 'math_symbols/latex/latex_sqrt_y.png' },
+            { name: 'sqrt_z', file: 'math_symbols/latex/latex_sqrt_z.png' },
+            { name: 'sqrt_2', file: 'math_symbols/latex/latex_sqrt_2.png' },
+            { name: 'sqrt_3', file: 'math_symbols/latex/latex_sqrt_3.png' },
+            { name: 'sqrt_5', file: 'math_symbols/latex/latex_sqrt_5.png' },
+            { name: 'integral_f', file: 'math_symbols/latex/latex_integral_f.png' },
+            { name: 'integral_0_1', file: 'math_symbols/latex/latex_integral_0_1.png' },
+            { name: 'integral_inf', file: 'math_symbols/latex/latex_integral_inf.png' },
+            { name: 'sum_n', file: 'math_symbols/latex/latex_sum_n.png' },
+            { name: 'product_n', file: 'math_symbols/latex/latex_product_n.png' },
+            { name: 'derivative_f', file: 'math_symbols/latex/latex_derivative_f.png' },
+            { name: 'partial_f', file: 'math_symbols/latex/latex_partial_f.png' },
+            { name: 'second_derivative', file: 'math_symbols/latex/latex_second_derivative.png' },
+            { name: 'quadratic', file: 'math_symbols/latex/latex_quadratic.png' },
+            { name: 'pythagorean', file: 'math_symbols/latex/latex_pythagorean.png' },
+            { name: 'euler', file: 'math_symbols/latex/latex_euler.png' },
+            { name: 'gaussian', file: 'math_symbols/latex/latex_gaussian.png' },
+            { name: 'vector_a', file: 'math_symbols/latex/latex_vector_a.png' },
+            { name: 'vector_b', file: 'math_symbols/latex/latex_vector_b.png' },
+            { name: 'vector_c', file: 'math_symbols/latex/latex_vector_c.png' },
+            { name: 'vector_alpha', file: 'math_symbols/latex/latex_vector_alpha.png' },
+            { name: 'vector_beta', file: 'math_symbols/latex/latex_vector_beta.png' },
+            { name: 'limit_x_0', file: 'math_symbols/latex/latex_limit_x_0.png' },
+            { name: 'limit_x_inf', file: 'math_symbols/latex/latex_limit_x_inf.png' },
+            { name: 'set_real', file: 'math_symbols/latex/latex_set_real.png' },
+            { name: 'set_integer', file: 'math_symbols/latex/latex_set_integer.png' },
+            { name: 'set_natural', file: 'math_symbols/latex/latex_set_natural.png' },
+            { name: 'set_complex', file: 'math_symbols/latex/latex_set_complex.png' },
+            { name: 'set_rational', file: 'math_symbols/latex/latex_set_rational.png' },
+            { name: 'forall', file: 'math_symbols/latex/latex_forall.png' },
+            { name: 'exists', file: 'math_symbols/latex/latex_exists.png' },
+            { name: 'not', file: 'math_symbols/latex/latex_not.png' },
+            
+            // Math Symbols
+            { name: 'plus', file: 'math_symbols/math/math_plus.png' },
+            { name: 'minus', file: 'math_symbols/math/math_minus.png' },
+            { name: 'times', file: 'math_symbols/math/math_times.png' },
+            { name: 'divide', file: 'math_symbols/math/math_divide.png' },
+            { name: 'equals', file: 'math_symbols/math/math_equals.png' },
+            { name: 'not_equals', file: 'math_symbols/math/math_not_equals.png' },
+            { name: 'less_than', file: 'math_symbols/math/math_less_than.png' },
+            { name: 'greater_than', file: 'math_symbols/math/math_greater_than.png' },
+            { name: 'less_equal', file: 'math_symbols/math/math_less_equal.png' },
+            { name: 'greater_equal', file: 'math_symbols/math/math_greater_equal.png' },
+            { name: 'approximately', file: 'math_symbols/math/math_approximately.png' },
+            { name: 'infinity', file: 'math_symbols/math/math_infinity.png' },
+            { name: 'square_root', file: 'math_symbols/math/math_square_root.png' },
+            { name: 'integral', file: 'math_symbols/math/math_integral.png' },
+            { name: 'sum', file: 'math_symbols/math/math_sum.png' },
+            { name: 'product', file: 'math_symbols/math/math_product.png' },
+            { name: 'partial', file: 'math_symbols/math/math_partial.png' },
+            { name: 'nabla', file: 'math_symbols/math/math_nabla.png' },
+            { name: 'exists', file: 'math_symbols/math/math_exists.png' },
+            { name: 'forall', file: 'math_symbols/math/math_forall.png' },
+            { name: 'in', file: 'math_symbols/math/math_in.png' },
+            { name: 'not_in', file: 'math_symbols/math/math_not_in.png' },
+            { name: 'subset', file: 'math_symbols/math/math_subset.png' },
+            { name: 'superset', file: 'math_symbols/math/math_superset.png' },
+            { name: 'union', file: 'math_symbols/math/math_union.png' },
+            { name: 'intersection', file: 'math_symbols/math/math_intersection.png' },
+            { name: 'empty_set', file: 'math_symbols/math/math_empty_set.png' },
+            { name: 'angle', file: 'math_symbols/math/math_angle.png' },
+            { name: 'perpendicular', file: 'math_symbols/math/math_perpendicular.png' },
+            { name: 'parallel', file: 'math_symbols/math/math_parallel.png' },
+            { name: 'degree', file: 'math_symbols/math/math_degree.png' },
+            { name: 'prime', file: 'math_symbols/math/math_prime.png' },
+            { name: 'double_prime', file: 'math_symbols/math/math_double_prime.png' },
+            { name: 'therefore', file: 'math_symbols/math/math_therefore.png' },
+            { name: 'because', file: 'math_symbols/math/math_because.png' },
+            { name: 'square', file: 'math_symbols/math/math_square.png' },
+            { name: 'circle', file: 'math_symbols/math/math_circle.png' },
+            { name: 'triangle', file: 'math_symbols/math/math_triangle.png' },
+            { name: 'diamond', file: 'math_symbols/math/math_diamond.png' },
+            
+            // Compound Symbols
+            { name: 'fraction_1_2', file: 'math_symbols/compound/compound_fraction_1_2.png' },
+            { name: 'fraction_1_3', file: 'math_symbols/compound/compound_fraction_1_3.png' },
+            { name: 'fraction_2_3', file: 'math_symbols/compound/compound_fraction_2_3.png' },
+            { name: 'fraction_1_4', file: 'math_symbols/compound/compound_fraction_1_4.png' },
+            { name: 'fraction_3_4', file: 'math_symbols/compound/compound_fraction_3_4.png' },
+            { name: 'fraction_1_5', file: 'math_symbols/compound/compound_fraction_1_5.png' },
+            { name: 'fraction_2_5', file: 'math_symbols/compound/compound_fraction_2_5.png' },
+            { name: 'fraction_3_5', file: 'math_symbols/compound/compound_fraction_3_5.png' },
+            { name: 'fraction_4_5', file: 'math_symbols/compound/compound_fraction_4_5.png' },
+            { name: 'fraction_1_6', file: 'math_symbols/compound/compound_fraction_1_6.png' },
+            { name: 'fraction_5_6', file: 'math_symbols/compound/compound_fraction_5_6.png' },
+            { name: 'fraction_1_8', file: 'math_symbols/compound/compound_fraction_1_8.png' },
+            { name: 'fraction_3_8', file: 'math_symbols/compound/compound_fraction_3_8.png' },
+            { name: 'fraction_5_8', file: 'math_symbols/compound/compound_fraction_5_8.png' },
+            { name: 'fraction_7_8', file: 'math_symbols/compound/compound_fraction_7_8.png' },
+            { name: 'square_root_2', file: 'math_symbols/compound/compound_square_root_2.png' },
+            { name: 'square_root_3', file: 'math_symbols/compound/compound_square_root_3.png' },
+            { name: 'square_root_5', file: 'math_symbols/compound/compound_square_root_5.png' },
+            { name: 'pi_approx', file: 'math_symbols/compound/compound_pi_approx.png' },
+            { name: 'e_approx', file: 'math_symbols/compound/compound_e_approx.png' },
+            
+            // Subscripts
+            { name: 'sub_0', file: 'math_symbols/subscripts/subscript_sub_0.png' },
+            { name: 'sub_1', file: 'math_symbols/subscripts/subscript_sub_1.png' },
+            { name: 'sub_2', file: 'math_symbols/subscripts/subscript_sub_2.png' },
+            { name: 'sub_3', file: 'math_symbols/subscripts/subscript_sub_3.png' },
+            { name: 'sub_4', file: 'math_symbols/subscripts/subscript_sub_4.png' },
+            { name: 'sub_5', file: 'math_symbols/subscripts/subscript_sub_5.png' },
+            { name: 'sub_6', file: 'math_symbols/subscripts/subscript_sub_6.png' },
+            { name: 'sub_7', file: 'math_symbols/subscripts/subscript_sub_7.png' },
+            { name: 'sub_8', file: 'math_symbols/subscripts/subscript_sub_8.png' },
+            { name: 'sub_9', file: 'math_symbols/subscripts/subscript_sub_9.png' },
+            { name: 'sub_plus', file: 'math_symbols/subscripts/subscript_sub_plus.png' },
+            { name: 'sub_minus', file: 'math_symbols/subscripts/subscript_sub_minus.png' },
+            { name: 'sub_equals', file: 'math_symbols/subscripts/subscript_sub_equals.png' },
+            { name: 'sub_left_paren', file: 'math_symbols/subscripts/subscript_sub_left_paren.png' },
+            { name: 'sub_right_paren', file: 'math_symbols/subscripts/subscript_sub_right_paren.png' },
+            
+            // Superscripts
+            { name: 'sup_0', file: 'math_symbols/superscripts/superscript_sup_0.png' },
+            { name: 'sup_1', file: 'math_symbols/superscripts/superscript_sup_1.png' },
+            { name: 'sup_2', file: 'math_symbols/superscripts/superscript_sup_2.png' },
+            { name: 'sup_3', file: 'math_symbols/superscripts/superscript_sup_3.png' },
+            { name: 'sup_4', file: 'math_symbols/superscripts/superscript_sup_4.png' },
+            { name: 'sup_5', file: 'math_symbols/superscripts/superscript_sup_5.png' },
+            { name: 'sup_6', file: 'math_symbols/superscripts/superscript_sup_6.png' },
+            { name: 'sup_7', file: 'math_symbols/superscripts/superscript_sup_7.png' },
+            { name: 'sup_8', file: 'math_symbols/superscripts/superscript_sup_8.png' },
+            { name: 'sup_9', file: 'math_symbols/superscripts/superscript_sup_9.png' },
+            { name: 'sup_plus', file: 'math_symbols/superscripts/superscript_sup_plus.png' },
+            { name: 'sup_minus', file: 'math_symbols/superscripts/superscript_sup_minus.png' },
+            { name: 'sup_equals', file: 'math_symbols/superscripts/superscript_sup_equals.png' },
+            { name: 'sup_left_paren', file: 'math_symbols/superscripts/superscript_sup_left_paren.png' },
+            { name: 'sup_right_paren', file: 'math_symbols/superscripts/superscript_sup_right_paren.png' }
+        ];
+    </script>
+</body>
+</html>
