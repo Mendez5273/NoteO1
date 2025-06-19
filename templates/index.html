@@ -230,6 +230,7 @@
             background: #888;
         }
 
+        /* Math Notation Popup Styles */
         .notation-popup {
             position: absolute;
             background: #222;
@@ -237,39 +238,67 @@
             border: 1px solid #00ff00;
             border-radius: 6px;
             z-index: 1000;
-            min-width: 220px;
-            max-width: 350px;
-            max-height: 220px;
+            min-width: 300px;
+            max-width: 400px;
+            max-height: 300px;
             overflow-y: auto;
             font-size: 14px;
-            box-shadow: 0 2px 8px #000a;
+            box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+            display: none;
         }
+
         .notation-popup input {
-            width: 95%;
+            width: calc(100% - 16px);
             background: #111;
             color: #00ff00;
-            border: none;
+            border: 1px solid #333;
             outline: none;
-            font-size: 15px;
-            padding: 6px 8px;
-            margin: 6px 0 4px 0;
+            font-size: 14px;
+            padding: 8px;
+            margin: 8px;
             border-radius: 4px;
+            font-family: 'Courier New', monospace;
         }
-        .notation-popup .notation-result {
+
+        .notation-popup input:focus {
+            border-color: #00ff00;
+        }
+
+        .notation-result {
             display: flex;
             align-items: center;
-            padding: 4px 8px;
+            padding: 8px 12px;
             cursor: pointer;
+            border-bottom: 1px solid #333;
+            transition: background-color 0.2s;
         }
-        .notation-popup .notation-result.selected {
+
+        .notation-result:hover,
+        .notation-result.selected {
             background: #00ff00;
             color: #000;
         }
-        .notation-popup img {
-            height: 28px;
-            margin-right: 10px;
+
+        .notation-result img {
+            height: 24px;
+            width: auto;
+            margin-right: 12px;
             background: #fff;
             border-radius: 3px;
+            padding: 2px;
+        }
+
+        .notation-result span {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        /* No results message */
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
         }
     </style>
 </head>
@@ -304,13 +333,14 @@
                     <div class="page-title">
                         Toggle open tabs / tab 1 / tab 2 / ...
                     </div>
-                    <div class="editor-content" contenteditable="true" style="white-space:pre-wrap;outline:none;min-height:200px;background:#181818;color:#fff;font-family:'Courier New',monospace;font-size:14px;line-height:1.4;border:1px solid #101010;padding:15px;"></div>
+                    <textarea class="editor-content" placeholder="Start typing... Use / for math notation"></textarea>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="notationPopup" class="notation-popup" style="display:none;"></div>
+    <!-- Math Notation Popup -->
+    <div id="notationPopup" class="notation-popup"></div>
 
     <script>
         // Terminal logic implementation
@@ -759,247 +789,69 @@
         // Initialize notepad with current date
         document.querySelector('.editor-content').value = getCurrentDate() + "\n\n";
 
-        // Math Notation Symbols - Updated paths for new folder structure
+        // Math Notation Symbols - Using your actual folder structure
         const mathSymbols = [
             // Greek Letters
-            { name: 'alpha', file: 'math_symbols/greek/greek_alpha.png' },
-            { name: 'beta', file: 'math_symbols/greek/greek_beta.png' },
-            { name: 'gamma', file: 'math_symbols/greek/greek_gamma.png' },
-            { name: 'delta', file: 'math_symbols/greek/greek_delta.png' },
-            { name: 'epsilon', file: 'math_symbols/greek/greek_epsilon.png' },
-            { name: 'zeta', file: 'math_symbols/greek/greek_zeta.png' },
-            { name: 'eta', file: 'math_symbols/greek/greek_eta.png' },
-            { name: 'theta', file: 'math_symbols/greek/greek_theta.png' },
-            { name: 'iota', file: 'math_symbols/greek/greek_iota.png' },
-            { name: 'kappa', file: 'math_symbols/greek/greek_kappa.png' },
-            { name: 'lambda', file: 'math_symbols/greek/greek_lambda.png' },
-            { name: 'mu', file: 'math_symbols/greek/greek_mu.png' },
-            { name: 'nu', file: 'math_symbols/greek/greek_nu.png' },
-            { name: 'xi', file: 'math_symbols/greek/greek_xi.png' },
-            { name: 'omicron', file: 'math_symbols/greek/greek_omicron.png' },
-            { name: 'pi', file: 'math_symbols/greek/greek_pi.png' },
-            { name: 'rho', file: 'math_symbols/greek/greek_rho.png' },
-            { name: 'sigma', file: 'math_symbols/greek/greek_sigma.png' },
-            { name: 'tau', file: 'math_symbols/greek/greek_tau.png' },
-            { name: 'upsilon', file: 'math_symbols/greek/greek_upsilon.png' },
-            { name: 'phi', file: 'math_symbols/greek/greek_phi.png' },
-            { name: 'chi', file: 'math_symbols/greek/greek_chi.png' },
-            { name: 'psi', file: 'math_symbols/greek/greek_psi.png' },
-            { name: 'omega', file: 'math_symbols/greek/greek_omega.png' },
+            { name: 'alpha', file: 'notation_images/greek/greek_alpha.png' },
+            { name: 'beta', file: 'notation_images/greek/greek_beta.png' },
+            { name: 'gamma', file: 'notation_images/greek/greek_gamma.png' },
+            { name: 'delta', file: 'notation_images/greek/greek_delta.png' },
+            { name: 'epsilon', file: 'notation_images/greek/greek_epsilon.png' },
+            { name: 'zeta', file: 'notation_images/greek/greek_zeta.png' },
+            { name: 'eta', file: 'notation_images/greek/greek_eta.png' },
+            { name: 'theta', file: 'notation_images/greek/greek_theta.png' },
+            { name: 'iota', file: 'notation_images/greek/greek_iota.png' },
+            { name: 'kappa', file: 'notation_images/greek/greek_kappa.png' },
+            { name: 'lambda', file: 'notation_images/greek/greek_lambda.png' },
+            { name: 'mu', file: 'notation_images/greek/greek_mu.png' },
+            { name: 'nu', file: 'notation_images/greek/greek_nu.png' },
+            { name: 'xi', file: 'notation_images/greek/greek_xi.png' },
+            { name: 'omicron', file: 'notation_images/greek/greek_omicron.png' },
+            { name: 'pi', file: 'notation_images/greek/greek_pi.png' },
+            { name: 'rho', file: 'notation_images/greek/greek_rho.png' },
+            { name: 'sigma', file: 'notation_images/greek/greek_sigma.png' },
+            { name: 'tau', file: 'notation_images/greek/greek_tau.png' },
+            { name: 'upsilon', file: 'notation_images/greek/greek_upsilon.png' },
+            { name: 'phi', file: 'notation_images/greek/greek_phi.png' },
+            { name: 'chi', file: 'notation_images/greek/greek_chi.png' },
+            { name: 'psi', file: 'notation_images/greek/greek_psi.png' },
+            { name: 'omega', file: 'notation_images/greek/greek_omega.png' },
             
-            // Vector Notation (Hats)
-            { name: 'a_hat', file: 'math_symbols/vectors/hats/a_hat.png' },
-            { name: 'b_hat', file: 'math_symbols/vectors/hats/b_hat.png' },
-            { name: 'c_hat', file: 'math_symbols/vectors/hats/c_hat.png' },
-            { name: 'd_hat', file: 'math_symbols/vectors/hats/d_hat.png' },
-            { name: 'e_hat', file: 'math_symbols/vectors/hats/e_hat.png' },
-            { name: 'f_hat', file: 'math_symbols/vectors/hats/f_hat.png' },
-            { name: 'g_hat', file: 'math_symbols/vectors/hats/g_hat.png' },
-            { name: 'h_hat', file: 'math_symbols/vectors/hats/h_hat.png' },
-            { name: 'i_hat', file: 'math_symbols/vectors/hats/i_hat.png' },
-            { name: 'j_hat', file: 'math_symbols/vectors/hats/j_hat.png' },
-            { name: 'k_hat', file: 'math_symbols/vectors/hats/k_hat.png' },
-            { name: 'l_hat', file: 'math_symbols/vectors/hats/l_hat.png' },
-            { name: 'm_hat', file: 'math_symbols/vectors/hats/m_hat.png' },
-            { name: 'n_hat', file: 'math_symbols/vectors/hats/n_hat.png' },
-            { name: 'o_hat', file: 'math_symbols/vectors/hats/o_hat.png' },
-            { name: 'p_hat', file: 'math_symbols/vectors/hats/p_hat.png' },
-            { name: 'q_hat', file: 'math_symbols/vectors/hats/q_hat.png' },
-            { name: 'r_hat', file: 'math_symbols/vectors/hats/r_hat.png' },
-            { name: 's_hat', file: 'math_symbols/vectors/hats/s_hat.png' },
-            { name: 't_hat', file: 'math_symbols/vectors/hats/t_hat.png' },
-            { name: 'u_hat', file: 'math_symbols/vectors/hats/u_hat.png' },
-            { name: 'v_hat', file: 'math_symbols/vectors/hats/v_hat.png' },
-            { name: 'w_hat', file: 'math_symbols/vectors/hats/w_hat.png' },
-            { name: 'x_hat', file: 'math_symbols/vectors/hats/x_hat.png' },
-            { name: 'y_hat', file: 'math_symbols/vectors/hats/y_hat.png' },
-            { name: 'z_hat', file: 'math_symbols/vectors/hats/z_hat.png' },
+            // Hats
+            { name: 'a_hat', file: 'notation_images/hats/a_hat.png' },
+            { name: 'b_hat', file: 'notation_images/hats/b_hat.png' },
+            { name: 'c_hat', file: 'notation_images/hats/c_hat.png' },
+            { name: 'd_hat', file: 'notation_images/hats/d_hat.png' },
+            { name: 'e_hat', file: 'notation_images/hats/e_hat.png' },
+            { name: 'f_hat', file: 'notation_images/hats/f_hat.png' },
+            { name: 'g_hat', file: 'notation_images/hats/g_hat.png' },
+            { name: 'h_hat', file: 'notation_images/hats/h_hat.png' },
+            { name: 'i_hat', file: 'notation_images/hats/i_hat.png' },
+            { name: 'j_hat', file: 'notation_images/hats/j_hat.png' },
+            { name: 'k_hat', file: 'notation_images/hats/k_hat.png' },
+            { name: 'x_hat', file: 'notation_images/hats/x_hat.png' },
+            { name: 'y_hat', file: 'notation_images/hats/y_hat.png' },
+            { name: 'z_hat', file: 'notation_images/hats/z_hat.png' },
+            { name: 'alpha_hat', file: 'notation_images/hats/alpha_hat.png' },
+            { name: 'beta_hat', file: 'notation_images/hats/beta_hat.png' },
+            { name: 'gamma_hat', file: 'notation_images/hats/gamma_hat.png' },
+            { name: 'delta_hat', file: 'notation_images/hats/delta_hat.png' },
+            { name: 'theta_hat', file: 'notation_images/hats/theta_hat.png' },
+            { name: 'nabla_hat', file: 'notation_images/hats/nabla_hat.png' },
             
-            // Vector Notation (Arrows)
-            { name: 'a_arrow', file: 'math_symbols/vectors/arrows/a_arrow.png' },
-            { name: 'b_arrow', file: 'math_symbols/vectors/arrows/b_arrow.png' },
-            { name: 'c_arrow', file: 'math_symbols/vectors/arrows/c_arrow.png' },
-            { name: 'd_arrow', file: 'math_symbols/vectors/arrows/d_arrow.png' },
-            { name: 'e_arrow', file: 'math_symbols/vectors/arrows/e_arrow.png' },
-            { name: 'f_arrow', file: 'math_symbols/vectors/arrows/f_arrow.png' },
-            { name: 'g_arrow', file: 'math_symbols/vectors/arrows/g_arrow.png' },
-            { name: 'h_arrow', file: 'math_symbols/vectors/arrows/h_arrow.png' },
-            { name: 'i_arrow', file: 'math_symbols/vectors/arrows/i_arrow.png' },
-            { name: 'j_arrow', file: 'math_symbols/vectors/arrows/j_arrow.png' },
-            { name: 'k_arrow', file: 'math_symbols/vectors/arrows/k_arrow.png' },
-            { name: 'l_arrow', file: 'math_symbols/vectors/arrows/l_arrow.png' },
-            { name: 'm_arrow', file: 'math_symbols/vectors/arrows/m_arrow.png' },
-            { name: 'n_arrow', file: 'math_symbols/vectors/arrows/n_arrow.png' },
-            { name: 'o_arrow', file: 'math_symbols/vectors/arrows/o_arrow.png' },
-            { name: 'p_arrow', file: 'math_symbols/vectors/arrows/p_arrow.png' },
-            { name: 'q_arrow', file: 'math_symbols/vectors/arrows/q_arrow.png' },
-            { name: 'r_arrow', file: 'math_symbols/vectors/arrows/r_arrow.png' },
-            { name: 's_arrow', file: 'math_symbols/vectors/arrows/s_arrow.png' },
-            { name: 't_arrow', file: 'math_symbols/vectors/arrows/t_arrow.png' },
-            { name: 'u_arrow', file: 'math_symbols/vectors/arrows/u_arrow.png' },
-            { name: 'v_arrow', file: 'math_symbols/vectors/arrows/v_arrow.png' },
-            { name: 'w_arrow', file: 'math_symbols/vectors/arrows/w_arrow.png' },
-            { name: 'x_arrow', file: 'math_symbols/vectors/arrows/x_arrow.png' },
-            { name: 'y_arrow', file: 'math_symbols/vectors/arrows/y_arrow.png' },
-            { name: 'z_arrow', file: 'math_symbols/vectors/arrows/z_arrow.png' },
+            // Arrows
+            { name: 'a_arrow', file: 'notation_images/arrows/a_arrow.png' },
+            { name: 'b_arrow', file: 'notation_images/arrows/b_arrow.png' },
+            { name: 'alpha_arrow', file: 'notation_images/arrows/alpha_arrow.png' },
+            { name: 'beta_arrow', file: 'notation_images/arrows/beta_arrow.png' },
+            { name: 'gamma_arrow', file: 'notation_images/arrows/gamma_arrow.png' },
+            { name: 'delta_arrow', file: 'notation_images/arrows/delta_arrow.png' },
             
-            // Greek Letter Hats
-            { name: 'alpha_hat', file: 'math_symbols/vectors/hats/alpha_hat.png' },
-            { name: 'beta_hat', file: 'math_symbols/vectors/hats/beta_hat.png' },
-            { name: 'gamma_hat', file: 'math_symbols/vectors/hats/gamma_hat.png' },
-            { name: 'delta_hat', file: 'math_symbols/vectors/hats/delta_hat.png' },
-            { name: 'epsilon_hat', file: 'math_symbols/vectors/hats/epsilon_hat.png' },
-            { name: 'zeta_hat', file: 'math_symbols/vectors/hats/zeta_hat.png' },
-            { name: 'eta_hat', file: 'math_symbols/vectors/hats/eta_hat.png' },
-            { name: 'theta_hat', file: 'math_symbols/vectors/hats/theta_hat.png' },
-            { name: 'iota_hat', file: 'math_symbols/vectors/hats/iota_hat.png' },
-            { name: 'kappa_hat', file: 'math_symbols/vectors/hats/kappa_hat.png' },
-            { name: 'lambda_hat', file: 'math_symbols/vectors/hats/lambda_hat.png' },
-            { name: 'mu_hat', file: 'math_symbols/vectors/hats/mu_hat.png' },
-            { name: 'nu_hat', file: 'math_symbols/vectors/hats/nu_hat.png' },
-            { name: 'xi_hat', file: 'math_symbols/vectors/hats/xi_hat.png' },
-            { name: 'omicron_hat', file: 'math_symbols/vectors/hats/omicron_hat.png' },
-            { name: 'pi_hat', file: 'math_symbols/vectors/hats/pi_hat.png' },
-            { name: 'rho_hat', file: 'math_symbols/vectors/hats/rho_hat.png' },
-            { name: 'sigma_hat', file: 'math_symbols/vectors/hats/sigma_hat.png' },
-            { name: 'tau_hat', file: 'math_symbols/vectors/hats/tau_hat.png' },
-            { name: 'upsilon_hat', file: 'math_symbols/vectors/hats/upsilon_hat.png' },
-            { name: 'phi_hat', file: 'math_symbols/vectors/hats/phi_hat.png' },
-            { name: 'chi_hat', file: 'math_symbols/vectors/hats/chi_hat.png' },
-            { name: 'psi_hat', file: 'math_symbols/vectors/hats/psi_hat.png' },
-            { name: 'omega_hat', file: 'math_symbols/vectors/hats/omega_hat.png' },
-            { name: 'nabla_hat', file: 'math_symbols/vectors/hats/nabla_hat.png' },
-            
-            // Greek Letter Arrows
-            { name: 'alpha_arrow', file: 'math_symbols/vectors/arrows/alpha_arrow.png' },
-            { name: 'beta_arrow', file: 'math_symbols/vectors/arrows/beta_arrow.png' },
-            { name: 'gamma_arrow', file: 'math_symbols/vectors/arrows/gamma_arrow.png' },
-            { name: 'delta_arrow', file: 'math_symbols/vectors/arrows/delta_arrow.png' },
-            { name: 'epsilon_arrow', file: 'math_symbols/vectors/arrows/epsilon_arrow.png' },
-            { name: 'zeta_arrow', file: 'math_symbols/vectors/arrows/zeta_arrow.png' },
-            { name: 'eta_arrow', file: 'math_symbols/vectors/arrows/eta_arrow.png' },
-            { name: 'theta_arrow', file: 'math_symbols/vectors/arrows/theta_arrow.png' },
-            { name: 'iota_arrow', file: 'math_symbols/vectors/arrows/iota_arrow.png' },
-            { name: 'kappa_arrow', file: 'math_symbols/vectors/arrows/kappa_arrow.png' },
-            { name: 'lambda_arrow', file: 'math_symbols/vectors/arrows/lambda_arrow.png' },
-            { name: 'mu_arrow', file: 'math_symbols/vectors/arrows/mu_arrow.png' },
-            { name: 'nu_arrow', file: 'math_symbols/vectors/arrows/nu_arrow.png' },
-            { name: 'xi_arrow', file: 'math_symbols/vectors/arrows/xi_arrow.png' },
-            { name: 'omicron_arrow', file: 'math_symbols/vectors/arrows/omicron_arrow.png' },
-            { name: 'pi_arrow', file: 'math_symbols/vectors/arrows/pi_arrow.png' },
-            { name: 'rho_arrow', file: 'math_symbols/vectors/arrows/rho_arrow.png' },
-            { name: 'sigma_arrow', file: 'math_symbols/vectors/arrows/sigma_arrow.png' },
-            { name: 'tau_arrow', file: 'math_symbols/vectors/arrows/tau_arrow.png' },
-            { name: 'upsilon_arrow', file: 'math_symbols/vectors/arrows/upsilon_arrow.png' },
-            { name: 'phi_arrow', file: 'math_symbols/vectors/arrows/phi_arrow.png' },
-            { name: 'chi_arrow', file: 'math_symbols/vectors/arrows/chi_arrow.png' },
-            { name: 'psi_arrow', file: 'math_symbols/vectors/arrows/psi_arrow.png' },
-            { name: 'omega_arrow', file: 'math_symbols/vectors/arrows/omega_arrow.png' },
-            
-            // Vector Arrow Notation
-            { name: 'vector_arrow_a', file: 'math_symbols/vectors/vector_arrows/vector_arrow_a.png' },
-            { name: 'vector_arrow_b', file: 'math_symbols/vectors/vector_arrows/vector_arrow_b.png' },
-            { name: 'vector_arrow_c', file: 'math_symbols/vectors/vector_arrows/vector_arrow_c.png' },
-            { name: 'vector_arrow_d', file: 'math_symbols/vectors/vector_arrows/vector_arrow_d.png' },
-            { name: 'vector_arrow_e', file: 'math_symbols/vectors/vector_arrows/vector_arrow_e.png' },
-            { name: 'vector_arrow_f', file: 'math_symbols/vectors/vector_arrows/vector_arrow_f.png' },
-            { name: 'vector_arrow_g', file: 'math_symbols/vectors/vector_arrows/vector_arrow_g.png' },
-            { name: 'vector_arrow_h', file: 'math_symbols/vectors/vector_arrows/vector_arrow_h.png' },
-            { name: 'vector_arrow_i', file: 'math_symbols/vectors/vector_arrows/vector_arrow_i.png' },
-            { name: 'vector_arrow_j', file: 'math_symbols/vectors/vector_arrows/vector_arrow_j.png' },
-            { name: 'vector_arrow_k', file: 'math_symbols/vectors/vector_arrows/vector_arrow_k.png' },
-            { name: 'vector_arrow_l', file: 'math_symbols/vectors/vector_arrows/vector_arrow_l.png' },
-            { name: 'vector_arrow_m', file: 'math_symbols/vectors/vector_arrows/vector_arrow_m.png' },
-            { name: 'vector_arrow_n', file: 'math_symbols/vectors/vector_arrows/vector_arrow_n.png' },
-            { name: 'vector_arrow_o', file: 'math_symbols/vectors/vector_arrows/vector_arrow_o.png' },
-            { name: 'vector_arrow_p', file: 'math_symbols/vectors/vector_arrows/vector_arrow_p.png' },
-            { name: 'vector_arrow_q', file: 'math_symbols/vectors/vector_arrows/vector_arrow_q.png' },
-            { name: 'vector_arrow_r', file: 'math_symbols/vectors/vector_arrows/vector_arrow_r.png' },
-            { name: 'vector_arrow_s', file: 'math_symbols/vectors/vector_arrows/vector_arrow_s.png' },
-            { name: 'vector_arrow_t', file: 'math_symbols/vectors/vector_arrows/vector_arrow_t.png' },
-            { name: 'vector_arrow_u', file: 'math_symbols/vectors/vector_arrows/vector_arrow_u.png' },
-            { name: 'vector_arrow_v', file: 'math_symbols/vectors/vector_arrows/vector_arrow_v.png' },
-            { name: 'vector_arrow_w', file: 'math_symbols/vectors/vector_arrows/vector_arrow_w.png' },
-            { name: 'vector_arrow_x', file: 'math_symbols/vectors/vector_arrows/vector_arrow_x.png' },
-            { name: 'vector_arrow_y', file: 'math_symbols/vectors/vector_arrows/vector_arrow_y.png' },
-            { name: 'vector_arrow_z', file: 'math_symbols/vectors/vector_arrows/vector_arrow_z.png' },
-            { name: 'vector_arrow_alpha', file: 'math_symbols/vectors/vector_arrows/vector_arrow_alpha.png' },
-            { name: 'vector_arrow_beta', file: 'math_symbols/vectors/vector_arrows/vector_arrow_beta.png' },
-            { name: 'vector_arrow_gamma', file: 'math_symbols/vectors/vector_arrows/vector_arrow_gamma.png' },
-            { name: 'vector_arrow_delta', file: 'math_symbols/vectors/vector_arrows/vector_arrow_delta.png' },
-            { name: 'vector_arrow_epsilon', file: 'math_symbols/vectors/vector_arrows/vector_arrow_epsilon.png' },
-            { name: 'vector_arrow_zeta', file: 'math_symbols/vectors/vector_arrows/vector_arrow_zeta.png' },
-            { name: 'vector_arrow_eta', file: 'math_symbols/vectors/vector_arrows/vector_arrow_eta.png' },
-            { name: 'vector_arrow_theta', file: 'math_symbols/vectors/vector_arrows/vector_arrow_theta.png' },
-            { name: 'vector_arrow_iota', file: 'math_symbols/vectors/vector_arrows/vector_arrow_iota.png' },
-            { name: 'vector_arrow_kappa', file: 'math_symbols/vectors/vector_arrows/vector_arrow_kappa.png' },
-            { name: 'vector_arrow_lambda', file: 'math_symbols/vectors/vector_arrows/vector_arrow_lambda.png' },
-            { name: 'vector_arrow_mu', file: 'math_symbols/vectors/vector_arrows/vector_arrow_mu.png' },
-            { name: 'vector_arrow_nu', file: 'math_symbols/vectors/vector_arrows/vector_arrow_nu.png' },
-            { name: 'vector_arrow_xi', file: 'math_symbols/vectors/vector_arrows/vector_arrow_xi.png' },
-            { name: 'vector_arrow_omicron', file: 'math_symbols/vectors/vector_arrows/vector_arrow_omicron.png' },
-            { name: 'vector_arrow_pi', file: 'math_symbols/vectors/vector_arrows/vector_arrow_pi.png' },
-            { name: 'vector_arrow_rho', file: 'math_symbols/vectors/vector_arrows/vector_arrow_rho.png' },
-            { name: 'vector_arrow_sigma', file: 'math_symbols/vectors/vector_arrows/vector_arrow_sigma.png' },
-            { name: 'vector_arrow_tau', file: 'math_symbols/vectors/vector_arrows/vector_arrow_tau.png' },
-            { name: 'vector_arrow_upsilon', file: 'math_symbols/vectors/vector_arrows/vector_arrow_upsilon.png' },
-            { name: 'vector_arrow_phi', file: 'math_symbols/vectors/vector_arrows/vector_arrow_phi.png' },
-            { name: 'vector_arrow_chi', file: 'math_symbols/vectors/vector_arrows/vector_arrow_chi.png' },
-            { name: 'vector_arrow_psi', file: 'math_symbols/vectors/vector_arrows/vector_arrow_psi.png' },
-            { name: 'vector_arrow_omega', file: 'math_symbols/vectors/vector_arrows/vector_arrow_omega.png' },
-            
-            // Vector Vector Notation
-            { name: 'vector_vector_a', file: 'math_symbols/vectors/vector_vectors/vector_vector_a.png' },
-            { name: 'vector_vector_b', file: 'math_symbols/vectors/vector_vectors/vector_vector_b.png' },
-            { name: 'vector_vector_c', file: 'math_symbols/vectors/vector_vectors/vector_vector_c.png' },
-            { name: 'vector_vector_d', file: 'math_symbols/vectors/vector_vectors/vector_vector_d.png' },
-            { name: 'vector_vector_e', file: 'math_symbols/vectors/vector_vectors/vector_vector_e.png' },
-            { name: 'vector_vector_f', file: 'math_symbols/vectors/vector_vectors/vector_vector_f.png' },
-            { name: 'vector_vector_g', file: 'math_symbols/vectors/vector_vectors/vector_vector_g.png' },
-            { name: 'vector_vector_h', file: 'math_symbols/vectors/vector_vectors/vector_vector_h.png' },
-            { name: 'vector_vector_i', file: 'math_symbols/vectors/vector_vectors/vector_vector_i.png' },
-            { name: 'vector_vector_j', file: 'math_symbols/vectors/vector_vectors/vector_vector_j.png' },
-            { name: 'vector_vector_k', file: 'math_symbols/vectors/vector_vectors/vector_vector_k.png' },
-            { name: 'vector_vector_l', file: 'math_symbols/vectors/vector_vectors/vector_vector_l.png' },
-            { name: 'vector_vector_m', file: 'math_symbols/vectors/vector_vectors/vector_vector_m.png' },
-            { name: 'vector_vector_n', file: 'math_symbols/vectors/vector_vectors/vector_vector_n.png' },
-            { name: 'vector_vector_o', file: 'math_symbols/vectors/vector_vectors/vector_vector_o.png' },
-            { name: 'vector_vector_p', file: 'math_symbols/vectors/vector_vectors/vector_vector_p.png' },
-            { name: 'vector_vector_q', file: 'math_symbols/vectors/vector_vectors/vector_vector_q.png' },
-            { name: 'vector_vector_r', file: 'math_symbols/vectors/vector_vectors/vector_vector_r.png' },
-            { name: 'vector_vector_s', file: 'math_symbols/vectors/vector_vectors/vector_vector_s.png' },
-            { name: 'vector_vector_t', file: 'math_symbols/vectors/vector_vectors/vector_vector_t.png' },
-            { name: 'vector_vector_u', file: 'math_symbols/vectors/vector_vectors/vector_vector_u.png' },
-            { name: 'vector_vector_v', file: 'math_symbols/vectors/vector_vectors/vector_vector_v.png' },
-            { name: 'vector_vector_w', file: 'math_symbols/vectors/vector_vectors/vector_vector_w.png' },
-            { name: 'vector_vector_x', file: 'math_symbols/vectors/vector_vectors/vector_vector_x.png' },
-            { name: 'vector_vector_y', file: 'math_symbols/vectors/vector_vectors/vector_vector_y.png' },
-            { name: 'vector_vector_z', file: 'math_symbols/vectors/vector_vectors/vector_vector_z.png' },
-            { name: 'vector_vector_alpha', file: 'math_symbols/vectors/vector_vectors/vector_vector_alpha.png' },
-            { name: 'vector_vector_beta', file: 'math_symbols/vectors/vector_vectors/vector_vector_beta.png' },
-            { name: 'vector_vector_gamma', file: 'math_symbols/vectors/vector_vectors/vector_vector_gamma.png' },
-            { name: 'vector_vector_delta', file: 'math_symbols/vectors/vector_vectors/vector_vector_delta.png' },
-            { name: 'vector_vector_epsilon', file: 'math_symbols/vectors/vector_vectors/vector_vector_epsilon.png' },
-            { name: 'vector_vector_zeta', file: 'math_symbols/vectors/vector_vectors/vector_vector_zeta.png' },
-            { name: 'vector_vector_eta', file: 'math_symbols/vectors/vector_vectors/vector_vector_eta.png' },
-            { name: 'vector_vector_theta', file: 'math_symbols/vectors/vector_vectors/vector_vector_theta.png' },
-            { name: 'vector_vector_iota', file: 'math_symbols/vectors/vector_vectors/vector_vector_iota.png' },
-            { name: 'vector_vector_kappa', file: 'math_symbols/vectors/vector_vectors/vector_vector_kappa.png' },
-            { name: 'vector_vector_lambda', file: 'math_symbols/vectors/vector_vectors/vector_vector_lambda.png' },
-            { name: 'vector_vector_mu', file: 'math_symbols/vectors/vector_vectors/vector_vector_mu.png' },
-            { name: 'vector_vector_nu', file: 'math_symbols/vectors/vector_vectors/vector_vector_nu.png' },
-            { name: 'vector_vector_xi', file: 'math_symbols/vectors/vector_vectors/vector_vector_xi.png' },
-            { name: 'vector_vector_omicron', file: 'math_symbols/vectors/vector_vectors/vector_vector_omicron.png' },
-            { name: 'vector_vector_pi', file: 'math_symbols/vectors/vector_vectors/vector_vector_pi.png' },
-            { name: 'vector_vector_rho', file: 'math_symbols/vectors/vector_vectors/vector_vector_rho.png' },
-            { name: 'vector_vector_sigma', file: 'math_symbols/vectors/vector_vectors/vector_vector_sigma.png' },
-            { name: 'vector_vector_tau', file: 'math_symbols/vectors/vector_vectors/vector_vector_tau.png' },
-            { name: 'vector_vector_upsilon', file: 'math_symbols/vectors/vector_vectors/vector_vector_upsilon.png' },
-            { name: 'vector_vector_phi', file: 'math_symbols/vectors/vector_vectors/vector_vector_phi.png' },
-            { name: 'vector_vector_chi', file: 'math_symbols/vectors/vector_vectors/vector_vector_chi.png' },
-            { name: 'vector_vector_psi', file: 'math_symbols/vectors/vector_vectors/vector_vector_psi.png' },
-            { name: 'vector_vector_omega', file: 'math_symbols/vectors/vector_vectors/vector_vector_omega.png' }
-        ];
-    </script>
-</body>
-</html>
+            // Math symbols
+            { name: 'integral', file: 'notation_images/math/math_integral.png' },
+            { name: 'sum', file: 'notation_images/math/math_sum.png' },
+            { name: 'product', file: 'notation_images/math/math_product.png' },
+            { name: 'sqrt', file: 'notation_images/math/math_square_root.png' },
+            { name: 'infinity', file: 'notation_images/math/math_infinity.png' },
+            { name: 'partial', file: 'notation_images/math/math_partial.png' },
+            { name: 'nabla', file: 'notation_images/math/math_nabla.png
