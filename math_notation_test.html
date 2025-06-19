@@ -1,1 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Notation Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #100f0f;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #00ff00;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .test-area {
+            background-color: #181818;
+            border: 1px solid #00ff00;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .editor {
+            width: 100%;
+            min-height: 300px;
+            background-color: #0f0f0f;
+            color: #ffffff;
+            border: 1px solid #333;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            resize: vertical;
+            outline: none;
+        }
+
+        .editor:focus {
+            border-color: #00ff00;
+        }
+
+        .instructions {
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .notation-popup {
+            position: absolute;
+            background: #222;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            border-radius: 6px;
+            z-index: 1000;
+            min-width: 220px;
+            max-width: 350px;
+            max-height: 220px;
+            overflow-y: auto;
+            font-size: 14px;
+            box-shadow: 0 2px 8px #000a;
+        }
+
+        .notation-popup input {
+            width: 95%;
+            background: #111;
+            color: #00ff00;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            padding: 6px 8px;
+            margin: 6px 0 4px 0;
+            border-radius: 4px;
+        }
+
+        .notation-popup .notation-result {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        .notation-popup .notation-result.selected {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .notation-popup img {
+            height: 28px;
+            margin-right: 10px;
+            background: #fff;
+            border-radius: 3px;
+        }
+
+        .stats {
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .stats h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 Math Notation Tester</h1>
+        
+        <div class="instructions">
+            <h3>How to Use:</h3>
+            <ul>
+                <li><strong>Type "/"</strong> in the editor to open the math notation popup</li>
+                <li><strong>Search</strong> for symbols by typing part of the name (e.g., "alpha", "frac", "integral")</li>
+                <li><strong>Navigate</strong> with arrow keys to select symbols</li>
+                <li><strong>Press Enter</strong> to insert the selected symbol</li>
+                <li><strong>Press Escape</strong> to close the popup</li>
+            </ul>
+        </div>
+
+        <div class="test-area">
+            <h3 style="color: #00ff00; margin-bottom: 10px;">Test Editor:</h3>
+            <div class="editor" contenteditable="true" id="testEditor">
+Type "/" to test the math notation popup...
+
+Try searching for:
+• Greek letters: alpha, beta, gamma, pi
+• Fractions: frac_1_2, frac_2_3
+• Math symbols: plus, minus, equals, integral
+• Vectors: a_hat, b_arrow, vector_a
+• Subscripts: sub_1, sub_2
+• Superscripts: sup_2, sup_3
+            </div>
+        </div>
+
+        <div class="stats">
+            <h3>Available Symbols:</h3>
+            <p><strong>Greek Letters:</strong> 24 symbols (α, β, γ, δ, ε, ζ, η, θ, ι, κ, λ, μ, ν, ξ, ο, π, ρ, σ, τ, υ, φ, χ, ψ, ω)</p>
+            <p><strong>Vector Notation:</strong> 201 symbols (hats, arrows, vector arrows, vector vectors)</p>
+            <p><strong>LaTeX Expressions:</strong> 60 symbols (fractions, integrals, derivatives, limits, sets)</p>
+            <p><strong>Math Symbols:</strong> 39 symbols (operators, relations, set theory)</p>
+            <p><strong>Compound Symbols:</strong> 20 symbols (common mathematical expressions)</p>
+            <p><strong>Subscripts:</strong> 15 symbols (numbers and operators)</p>
+            <p><strong>Superscripts:</strong> 15 symbols (numbers and operators)</p>
+            <p><strong>Total:</strong> 374 math symbols available</p>
+        </div>
+    </div>
+
+    <div id="notationPopup" class="notation-popup" style="display:none;"></div>
+
+    <script>
+        // Math Notation Symbols - Updated paths for new folder structure
+        const mathSymbols = [
+            // Greek Letters
+            { name: 'alpha', file: 'math_symbols/greek/greek_alpha.png' },
+            { name: 'beta', file: 'math_symbols/greek/greek_beta.png' },
+            { name: 'gamma', file: 'math_symbols/greek/greek_gamma.png' },
+            { name: 'delta', file: 'math_symbols/greek/greek_delta.png' },
+            { name: 'epsilon', file: 'math_symbols/greek/greek_epsilon.png' },
+            { name: 'zeta', file: 'math_symbols/greek/greek_zeta.png' },
+            { name: 'eta', file: 'math_symbols/greek/greek_eta.png' },
+            { name: 'theta', file: 'math_symbols/greek/greek_theta.png' },
+            { name: 'iota', file: 'math_symbols/greek/greek_iota.png' },
+            { name: 'kappa', file: 'math_symbols/greek/greek_kappa.png' },
+            { name: 'lambda', file: 'math_symbols/greek/greek_lambda.png' },
+            { name: 'mu', file: 'math_symbols/greek/greek_mu.png' },
+            { name: 'nu', file: 'math_symbols/greek/greek_nu.png' },
+            { name: 'xi', file: 'math_symbols/greek/greek_xi.png' },
+            { name: 'omicron', file: 'math_symbols/greek/greek_omicron.png' },
+            { name: 'pi', file: 'math_symbols/greek/greek_pi.png' },
+            { name: 'rho', file: 'math_symbols/greek/greek_rho.png' },
+            { name: 'sigma', file: 'math_symbols/greek/greek_sigma.png' },
+            { name: 'tau', file: 'math_symbols/greek/greek_tau.png' },
+            { name: 'upsilon', file: 'math_symbols/greek/greek_upsilon.png' },
+            { name: 'phi', file: 'math_symbols/greek/greek_phi.png' },
+            { name: 'chi', file: 'math_symbols/greek/greek_chi.png' },
+            { name: 'psi', file: 'math_symbols/greek/greek_psi.png' },
+            { name: 'omega', file: 'math_symbols/greek/greek_omega.png' },
+            
+            // Vector Notation (Hats)
+            { name: 'a_hat', file: 'math_symbols/vectors/hats/a_hat.png' },
+            { name: 'b_hat', file: 'math_symbols/vectors/hats/b_hat.png' },
+            { name: 'c_hat', file: 'math_symbols/vectors/hats/c_hat.png' },
+            { name: 'd_hat', file: 'math_symbols/vectors/hats/d_hat.png' },
+            { name: 'e_hat', file: 'math_symbols/vectors/hats/e_hat.png' },
+            { name: 'f_hat', file: 'math_symbols/vectors/hats/f_hat.png' },
+            { name: 'g_hat', file: 'math_symbols/vectors/hats/g_hat.png' },
+            { name: 'h_hat', file: 'math_symbols/vectors/hats/h_hat.png' },
+            { name: 'i_hat', file: 'math_symbols/vectors/hats/i_hat.png' },
+            { name: 'j_hat', file: 'math_symbols/vectors/hats/j_hat.png' },
+            { name: 'k_hat', file: 'math_symbols/vectors/hats/k_hat.png' },
+            { name: 'l_hat', file: 'math_symbols/vectors/hats/l_hat.png' },
+            { name: 'm_hat', file: 'math_symbols/vectors/hats/m_hat.png' },
+            { name: 'n_hat', file: 'math_symbols/vectors/hats/n_hat.png' },
+            { name: 'o_hat', file: 'math_symbols/vectors/hats/o_hat.png' },
+            { name: 'p_hat', file: 'math_symbols/vectors/hats/p_hat.png' },
+            { name: 'q_hat', file: 'math_symbols/vectors/hats/q_hat.png' },
+            { name: 'r_hat', file: 'math_symbols/vectors/hats/r_hat.png' },
+            { name: 's_hat', file: 'math_symbols/vectors/hats/s_hat.png' },
+            { name: 't_hat', file: 'math_symbols/vectors/hats/t_hat.png' },
+            { name: 'u_hat', file: 'math_symbols/vectors/hats/u_hat.png' },
+            { name: 'v_hat', file: 'math_symbols/vectors/hats/v_hat.png' },
+            { name: 'w_hat', file: 'math_symbols/vectors/hats/w_hat.png' },
+            { name: 'x_hat', file: 'math_symbols/vectors/hats/x_hat.png' },
+            { name: 'y_hat', file: 'math_symbols/vectors/hats/y_hat.png' },
+            { name: 'z_hat', file: 'math_symbols/vectors/hats/z_hat.png' },
+            
+            // Vector Notation (Arrows)
+            { name: 'a_arrow', file: 'math_symbols/vectors/arrows/a_arrow.png' },
+            { name: 'b_arrow', file: 'math_symbols/vectors/arrows/b_arrow.png' },
+            { name: 'c_arrow', file: 'math_symbols/vectors/arrows/c_arrow.png' },
+            { name: 'd_arrow', file: 'math_symbols/vectors/arrows/d_arrow.png' },
+            { name: 'e_arrow', file: 'math_symbols/vectors/arrows/e_arrow.png' },
+            { name: 'f_arrow', file: 'math_symbols/vectors/arrows/f_arrow.png' },
+            { name: 'g_arrow', file: 'math_symbols/vectors/arrows/g_arrow.png' },
+            { name: 'h_arrow', file: 'math_symbols/vectors/arrows/h_arrow.png' },
+            { name: 'i_arrow', file: 'math_symbols/vectors/arrows/i_arrow.png' },
+            { name: 'j_arrow', file: 'math_symbols/vectors/arrows/j_arrow.png' },
+            { name: 'k_arrow', file: 'math_symbols/vectors/arrows/k_arrow.png' },
+            { name: 'l_arrow', file: 'math_symbols/vectors/arrows/l_arrow.png' },
+            { name: 'm_arrow', file: 'math_symbols/vectors/arrows/m_arrow.png' },
+            { name: 'n_arrow', file: 'math_symbols/vectors/arrows/n_arrow.png' },
+            { name: 'o_arrow', file: 'math_symbols/vectors/arrows/o_arrow.png' },
+            { name: 'p_arrow', file: 'math_symbols/vectors/arrows/p_arrow.png' },
+            { name: 'q_arrow', file: 'math_symbols/vectors/arrows/q_arrow.png' },
+            { name: 'r_arrow', file: 'math_symbols/vectors/arrows/r_arrow.png' },
+            { name: 's_arrow', file: 'math_symbols/vectors/arrows/s_arrow.png' },
+            { name: 't_arrow', file: 'math_symbols/vectors/arrows/t_arrow.png' },
+            { name: 'u_arrow', file: 'math_symbols/vectors/arrows/u_arrow.png' },
+            { name: 'v_arrow', file: 'math_symbols/vectors/arrows/v_arrow.png' },
+            { name: 'w_arrow', file: 'math_symbols/vectors/arrows/w_arrow.png' },
+            { name: 'x_arrow', file: 'math_symbols/vectors/arrows/x_arrow.png' },
+            { name: 'y_arrow', file: 'math_symbols/vectors/arrows/y_arrow.png' },
+            { name: 'z_arrow', file: 'math_symbols/vectors/arrows/z_arrow.png' },
+            
+            // LaTeX Expressions
+            { name: 'x_squared', file: 'math_symbols/latex/latex_x_squared.png' },
+            { name: 'y_squared', file: 'math_symbols/latex/latex_y_squared.png' },
+            { name: 'z_squared', file: 'math_symbols/latex/latex_z_squared.png' },
+            { name: 'a_squared', file: 'math_symbols/latex/latex_a_squared.png' },
+            { name: 'b_squared', file: 'math_symbols/latex/latex_b_squared.png' },
+            { name: 'c_squared', file: 'math_symbols/latex/latex_c_squared.png' },
+            { name: 'x_cubed', file: 'math_symbols/latex/latex_x_cubed.png' },
+            { name: 'y_cubed', file: 'math_symbols/latex/latex_y_cubed.png' },
+            { name: 'z_cubed', file: 'math_symbols/latex/latex_z_cubed.png' },
+            { name: 'x_to_n', file: 'math_symbols/latex/latex_x_to_n.png' },
+            { name: 'y_to_n', file: 'math_symbols/latex/latex_y_to_n.png' },
+            { name: 'z_to_n', file: 'math_symbols/latex/latex_z_to_n.png' },
+            { name: 'x_sub_1', file: 'math_symbols/latex/latex_x_sub_1.png' },
+            { name: 'x_sub_2', file: 'math_symbols/latex/latex_x_sub_2.png' },
+            { name: 'x_sub_n', file: 'math_symbols/latex/latex_x_sub_n.png' },
+            { name: 'y_sub_1', file: 'math_symbols/latex/latex_y_sub_1.png' },
+            { name: 'y_sub_2', file: 'math_symbols/latex/latex_y_sub_2.png' },
+            { name: 'y_sub_n', file: 'math_symbols/latex/latex_y_sub_n.png' },
+            { name: 'z_sub_1', file: 'math_symbols/latex/latex_z_sub_1.png' },
+            { name: 'z_sub_2', file: 'math_symbols/latex/latex_z_sub_2.png' },
+            { name: 'z_sub_n', file: 'math_symbols/latex/latex_z_sub_n.png' },
+            { name: 'frac_1_2', file: 'math_symbols/latex/latex_frac_1_2.png' },
+            { name: 'frac_1_3', file: 'math_symbols/latex/latex_frac_1_3.png' },
+            { name: 'frac_2_3', file: 'math_symbols/latex/latex_frac_2_3.png' },
+            { name: 'frac_1_4', file: 'math_symbols/latex/latex_frac_1_4.png' },
+            { name: 'frac_3_4', file: 'math_symbols/latex/latex_frac_3_4.png' },
+            { name: 'frac_1_5', file: 'math_symbols/latex/latex_frac_1_5.png' },
+            { name: 'sqrt_x', file: 'math_symbols/latex/latex_sqrt_x.png' },
+            { name: 'sqrt_y', file: 'math_symbols/latex/latex_sqrt_y.png' },
+            { name: 'sqrt_z', file: 'math_symbols/latex/latex_sqrt_z.png' },
+            { name: 'sqrt_2', file: 'math_symbols/latex/latex_sqrt_2.png' },
+            { name: 'sqrt_3', file: 'math_symbols/latex/latex_sqrt_3.png' },
+            { name: 'sqrt_5', file: 'math_symbols/latex/latex_sqrt_5.png' },
+            { name: 'integral_f', file: 'math_symbols/latex/latex_integral_f.png' },
+            { name: 'integral_0_1', file: 'math_symbols/latex/latex_integral_0_1.png' },
+            { name: 'integral_inf', file: 'math_symbols/latex/latex_integral_inf.png' },
+            { name: 'sum_n', file: 'math_symbols/latex/latex_sum_n.png' },
+            { name: 'product_n', file: 'math_symbols/latex/latex_product_n.png' },
+            { name: 'derivative_f', file: 'math_symbols/latex/latex_derivative_f.png' },
+            { name: 'partial_f', file: 'math_symbols/latex/latex_partial_f.png' },
+            { name: 'second_derivative', file: 'math_symbols/latex/latex_second_derivative.png' },
+            { name: 'quadratic', file: 'math_symbols/latex/latex_quadratic.png' },
+            { name: 'pythagorean', file: 'math_symbols/latex/latex_pythagorean.png' },
+            { name: 'euler', file: 'math_symbols/latex/latex_euler.png' },
+            { name: 'gaussian', file: 'math_symbols/latex/latex_gaussian.png' },
+            { name: 'vector_a', file: 'math_symbols/latex/latex_vector_a.png' },
+            { name: 'vector_b', file: 'math_symbols/latex/latex_vector_b.png' },
+            { name: 'vector_c', file: 'math_symbols/latex/latex_vector_c.png' },
+            { name: 'vector_alpha', file: 'math_symbols/latex/latex_vector_alpha.png' },
+            { name: 'vector_beta', file: 'math_symbols/latex/latex_vector_beta.png' },
+            { name: 'limit_x_0', file: 'math_symbols/latex/latex_limit_x_0.png' },
+            { name: 'limit_x_inf', file: 'math_symbols/latex/latex_limit_x_inf.png' },
+            { name: 'set_real', file: 'math_symbols/latex/latex_set_real.png' },
+            { name: 'set_integer', file: 'math_symbols/latex/latex_set_integer.png' },
+            { name: 'set_natural', file: 'math_symbols/latex/latex_set_natural.png' },
+            { name: 'set_complex', file: 'math_symbols/latex/latex_set_complex.png' },
+            { name: 'set_rational', file: 'math_symbols/latex/latex_set_rational.png' },
+            { name: 'forall', file: 'math_symbols/latex/latex_forall.png' },
+            { name: 'exists', file: 'math_symbols/latex/latex_exists.png' },
+            { name: 'not', file: 'math_symbols/latex/latex_not.png' },
+            
+            // Math Symbols
+            { name: 'plus', file: 'math_symbols/math/math_plus.png' },
+            { name: 'minus', file: 'math_symbols/math/math_minus.png' },
+            { name: 'times', file: 'math_symbols/math/math_times.png' },
+            { name: 'divide', file: 'math_symbols/math/math_divide.png' },
+            { name: 'equals', file: 'math_symbols/math/math_equals.png' },
+            { name: 'not_equals', file: 'math_symbols/math/math_not_equals.png' },
+            { name: 'less_than', file: 'math_symbols/math/math_less_than.png' },
+            { name: 'greater_than', file: 'math_symbols/math/math_greater_than.png' },
+            { name: 'less_equal', file: 'math_symbols/math/math_less_equal.png' },
+            { name: 'greater_equal', file: 'math_symbols/math/math_greater_equal.png' },
+            { name: 'approximately', file: 'math_symbols/math/math_approximately.png' },
+            { name: 'infinity', file: 'math_symbols/math/math_infinity.png' },
+            { name: 'square_root', file: 'math_symbols/math/math_square_root.png' },
+            { name: 'integral', file: 'math_symbols/math/math_integral.png' },
+            { name: 'sum', file: 'math_symbols/math/math_sum.png' },
+            { name: 'product', file: 'math_symbols/math/math_product.png' },
+            { name: 'partial', file: 'math_symbols/math/math_partial.png' },
+            { name: 'nabla', file: 'math_symbols/math/math_nabla.png' },
+            { name: 'exists', file: 'math_symbols/math/math_exists.png' },
+            { name: 'forall', file: 'math_symbols/math/math_forall.png' },
+            { name: 'in', file: 'math_symbols/math/math_in.png' },
+            { name: 'not_in', file: 'math_symbols/math/math_not_in.png' },
+            { name: 'subset', file: 'math_symbols/math/math_subset.png' },
+            { name: 'superset', file: 'math_symbols/math/math_superset.png' },
+            { name: 'union', file: 'math_symbols/math/math_union.png' },
+            { name: 'intersection', file: 'math_symbols/math/math_intersection.png' },
+            { name: 'empty_set', file: 'math_symbols/math/math_empty_set.png' },
+            { name: 'angle', file: 'math_symbols/math/math_angle.png' },
+            { name: 'perpendicular', file: 'math_symbols/math/math_perpendicular.png' },
+            { name: 'parallel', file: 'math_symbols/math/math_parallel.png' },
+            { name: 'degree', file: 'math_symbols/math/math_degree.png' },
+            { name: 'prime', file: 'math_symbols/math/math_prime.png' },
+            { name: 'double_prime', file: 'math_symbols/math/math_double_prime.png' },
+            { name: 'therefore', file: 'math_symbols/math/math_therefore.png' },
+            { name: 'because', file: 'math_symbols/math/math_because.png' },
+            { name: 'square', file: 'math_symbols/math/math_square.png' },
+            { name: 'circle', file: 'math_symbols/math/math_circle.png' },
+            { name: 'triangle', file: 'math_symbols/math/math_triangle.png' },
+            { name: 'diamond', file: 'math_symbols/math/math_diamond.png' },
+            
+            // Compound Symbols
+            { name: 'fraction_1_2', file: 'math_symbols/compound/compound_fraction_1_2.png' },
+            { name: 'fraction_1_3', file: 'math_symbols/compound/compound_fraction_1_3.png' },
+            { name: 'fraction_2_3', file: 'math_symbols/compound/compound_fraction_2_3.png' },
+            { name: 'fraction_1_4', file: 'math_symbols/compound/compound_fraction_1_4.png' },
+            { name: 'fraction_3_4', file: 'math_symbols/compound/compound_fraction_3_4.png' },
+            { name: 'fraction_1_5', file: 'math_symbols/compound/compound_fraction_1_5.png' },
+            { name: 'fraction_2_5', file: 'math_symbols/compound/compound_fraction_2_5.png' },
+            { name: 'fraction_3_5', file: 'math_symbols/compound/compound_fraction_3_5.png' },
+            { name: 'fraction_4_5', file: 'math_symbols/compound/compound_fraction_4_5.png' },
+            { name: 'fraction_1_6', file: 'math_symbols/compound/compound_fraction_1_6.png' },
+            { name: 'fraction_5_6', file: 'math_symbols/compound/compound_fraction_5_6.png' },
+            { name: 'fraction_1_8', file: 'math_symbols/compound/compound_fraction_1_8.png' },
+            { name: 'fraction_3_8', file: 'math_symbols/compound/compound_fraction_3_8.png' },
+            { name: 'fraction_5_8', file: 'math_symbols/compound/compound_fraction_5_8.png' },
+            { name: 'fraction_7_8', file: 'math_symbols/compound/compound_fraction_7_8.png' },
+            { name: 'square_root_2', file: 'math_symbols/compound/compound_square_root_2.png' },
+            { name: 'square_root_3', file: 'math_symbols/compound/compound_square_root_3.png' },
+            { name: 'square_root_5', file: 'math_symbols/compound/compound_square_root_5.png' },
+            { name: 'pi_approx', file: 'math_symbols/compound/compound_pi_approx.png' },
+            { name: 'e_approx', file: 'math_symbols/compound/compound_e_approx.png' },
+            
+            // Subscripts
+            { name: 'sub_0', file: 'math_symbols/subscripts/subscript_sub_0.png' },
+            { name: 'sub_1', file: 'math_symbols/subscripts/subscript_sub_1.png' },
+            { name: 'sub_2', file: 'math_symbols/subscripts/subscript_sub_2.png' },
+            { name: 'sub_3', file: 'math_symbols/subscripts/subscript_sub_3.png' },
+            { name: 'sub_4', file: 'math_symbols/subscripts/subscript_sub_4.png' },
+            { name: 'sub_5', file: 'math_symbols/subscripts/subscript_sub_5.png' },
+            { name: 'sub_6', file: 'math_symbols/subscripts/subscript_sub_6.png' },
+            { name: 'sub_7', file: 'math_symbols/subscripts/subscript_sub_7.png' },
+            { name: 'sub_8', file: 'math_symbols/subscripts/subscript_sub_8.png' },
+            { name: 'sub_9', file: 'math_symbols/subscripts/subscript_sub_9.png' },
+            { name: 'sub_plus', file: 'math_symbols/subscripts/subscript_sub_plus.png' },
+            { name: 'sub_minus', file: 'math_symbols/subscripts/subscript_sub_minus.png' },
+            { name: 'sub_equals', file: 'math_symbols/subscripts/subscript_sub_equals.png' },
+            { name: 'sub_left_paren', file: 'math_symbols/subscripts/subscript_sub_left_paren.png' },
+            { name: 'sub_right_paren', file: 'math_symbols/subscripts/subscript_sub_right_paren.png' },
+            
+            // Superscripts
+            { name: 'sup_0', file: 'math_symbols/superscripts/superscript_sup_0.png' },
+            { name: 'sup_1', file: 'math_symbols/superscripts/superscript_sup_1.png' },
+            { name: 'sup_2', file: 'math_symbols/superscripts/superscript_sup_2.png' },
+            { name: 'sup_3', file: 'math_symbols/superscripts/superscript_sup_3.png' },
+            { name: 'sup_4', file: 'math_symbols/superscripts/superscript_sup_4.png' },
+            { name: 'sup_5', file: 'math_symbols/superscripts/superscript_sup_5.png' },
+            { name: 'sup_6', file: 'math_symbols/superscripts/superscript_sup_6.png' },
+            { name: 'sup_7', file: 'math_symbols/superscripts/superscript_sup_7.png' },
+            { name: 'sup_8', file: 'math_symbols/superscripts/superscript_sup_8.png' },
+            { name: 'sup_9', file: 'math_symbols/superscripts/superscript_sup_9.png' },
+            { name: 'sup_plus', file: 'math_symbols/superscripts/superscript_sup_plus.png' },
+            { name: 'sup_minus', file: 'math_symbols/superscripts/superscript_sup_minus.png' },
+            { name: 'sup_equals', file: 'math_symbols/superscripts/superscript_sup_equals.png' },
+            { name: 'sup_left_paren', file: 'math_symbols/superscripts/superscript_sup_left_paren.png' },
+            { name: 'sup_right_paren', file: 'math_symbols/superscripts/superscript_sup_right_paren.png' }
+        ];
+
+        // Math Notation Popup Functionality
+        let popup = null;
+        let selectedIndex = 0;
+        let filteredSymbols = [];
+
+        function showMathNotationPopup(editor, cursorPosition) {
+            // Create popup if it doesn't exist
+            if (!popup) {
+                popup = document.getElementById('notationPopup');
+            }
+
+            // Position popup near cursor
+            const rect = editor.getBoundingClientRect();
+            popup.style.left = (rect.left + cursorPosition.x) + 'px';
+            popup.style.top = (rect.top + cursorPosition.y + 20) + 'px';
+            popup.style.display = 'block';
+
+            // Add search input
+            popup.innerHTML = `
+                <input type="text" placeholder="Search symbols..." id="symbolSearch">
+                <div id="symbolResults"></div>
+            `;
+
+            // Show all symbols initially
+            filteredSymbols = [...mathSymbols];
+            displaySymbols();
+
+            // Focus search input
+            const searchInput = document.getElementById('symbolSearch');
+            searchInput.focus();
+
+            // Add event listeners
+            searchInput.addEventListener('input', filterSymbols);
+            searchInput.addEventListener('keydown', handlePopupKeys);
+            popup.addEventListener('click', handleSymbolClick);
+
+            // Close popup when clicking outside
+            document.addEventListener('click', closePopupOnOutsideClick);
+        }
+
+        function filterSymbols() {
+            const searchTerm = document.getElementById('symbolSearch').value.toLowerCase();
+            filteredSymbols = mathSymbols.filter(symbol => 
+                symbol.name.toLowerCase().includes(searchTerm)
+            );
+            selectedIndex = 0;
+            displaySymbols();
+        }
+
+        function displaySymbols() {
+            const resultsDiv = document.getElementById('symbolResults');
+            resultsDiv.innerHTML = '';
+
+            filteredSymbols.slice(0, 10).forEach((symbol, index) => {
+                const div = document.createElement('div');
+                div.className = 'notation-result';
+                if (index === selectedIndex) {
+                    div.classList.add('selected');
+                }
+                div.innerHTML = `
+                    <img src="${symbol.file}" alt="${symbol.name}">
+                    <span>${symbol.name}</span>
+                `;
+                div.onclick = () => insertSymbol(symbol);
+                resultsDiv.appendChild(div);
+            });
+        }
+
+        function handlePopupKeys(e) {
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, filteredSymbols.length - 1);
+                    displaySymbols();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, 0);
+                    displaySymbols();
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (filteredSymbols[selectedIndex]) {
+                        insertSymbol(filteredSymbols[selectedIndex]);
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    closePopup();
+                    break;
+            }
+        }
+
+        function handleSymbolClick(e) {
+            if (e.target.closest('.notation-result')) {
+                const index = Array.from(e.target.closest('.notation-result').parentNode.children).indexOf(e.target.closest('.notation-result'));
+                if (filteredSymbols[index]) {
+                    insertSymbol(filteredSymbols[index]);
+                }
+            }
+        }
+
+        function insertSymbol(symbol) {
+            const editor = document.getElementById('testEditor');
+            const img = document.createElement('img');
+            img.src = symbol.file;
+            img.alt = symbol.name;
+            img.style.height = '20px';
+            img.style.verticalAlign = 'middle';
+            img.style.margin = '0 2px';
+            
+            // Insert at cursor position
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(img);
+                range.collapse(false);
+            }
+            
+            closePopup();
+        }
+
+        function closePopup() {
+            if (popup) {
+                popup.style.display = 'none';
+            }
+            document.removeEventListener('click', closePopupOnOutsideClick);
+        }
+
+        function closePopupOnOutsideClick(e) {
+            if (!popup.contains(e.target)) {
+                closePopup();
+            }
+        }
+
+        // Editor event listener
+        document.getElementById('testEditor').addEventListener('keydown', function(e) {
+            if (e.key === '/') {
+                e.preventDefault();
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    showMathNotationPopup(this, {
+                        x: rect.left,
+                        y: rect.bottom
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
